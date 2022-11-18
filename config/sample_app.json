@@ -7,7 +7,7 @@
   },
 
   "report": {
-    "deb package filename": "test.db",
+    "deb package filename": "hello.deb",
     "deb package filepath": "C:/Users/Davsb/OneDrive/Documents/test.deb",
     "requirements filepath": "config/requirements.txt",
     "vulnerability": false,
