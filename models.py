@@ -57,3 +57,25 @@ class DeviceType(str, Enum):
 # New device model
 class NewDevice(BaseModel):
     device_type: DeviceType
+
+
+# App details
+class NewApp(BaseModel):
+    app_name: str
+    developer: str
+    datetime_published: str
+    file_size: int
+    support_website: str
+    support_email: str
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "app_name": "Workflow Automation",
+                "developer": "John Doe",
+                "datetime published": "Today",
+                "file_size": 15,
+                "support_website": "www.google.com",
+                "support_email": "hello@gmail.com"
+            }
+        }
