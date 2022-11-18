@@ -5,12 +5,11 @@ NOTE: APPS CAN ONLY BE UPLOADED BY DEVELOPERS
 """
 import time
 # Import dependencies
-from os import getcwd
-from os import system
 from json import loads
 from fastapi import APIRouter
 from fastapi import UploadFile, File
-from systems.utils import verify_id_token_user, upload_file
+from systems.database import apps_collection
+from systems.utils import verify_id_token_user, upload_file, validate_app
 
 # Repository router
 repo_router = APIRouter(prefix="/vstore", tags=["Vulture Store"])
@@ -21,26 +20,27 @@ repo_router = APIRouter(prefix="/vstore", tags=["Vulture Store"])
 def upload_new_app(id_token: str, files: UploadFile = File(...)):
     report_content = files.file.read()
     report_json = loads(report_content)
-    security_status = report_json["details"]["safe"]
-
-    # If safe
-    if security_status:
-        token = verify_id_token_user(id_token)
-        dev_check = token['developer']
-        if dev_check:
-            deb_filepath = report_json["report"]["deb package filepath"]
+    dev_check = verify_id_token_user(id_token)
+    app_name = report_json['details']['app name']
+    if dev_check:
+        app_check = validate_app(app_name)
+        if app_check:
             deb_filename = report_json["report"]["deb package filename"]
-            try:
-                system(f"copy {deb_filepath} {getcwd()}")
-                upload_file(deb_filename)
-                return {"file uploaded"}
+            repo_url = upload_file(deb_filename)
+            db_payload = {
+                "app name": report_json['details']["app name"],
+                "repo url": repo_url,
+                "developer": report_json['details']['developed by'],
+                "file size": report_json['report']['file size'],
+                "support website": report_json['support']['website'],
+                "support email": report_json['support']['support email']
+            }
+            apps_collection.insert_one(db_payload)
 
-            except FileNotFoundError as file_not_found:
-                return file_not_found
+        elif not app_check:
+            return {"app name already in use"}
 
-        elif not dev_check:
-            return {"Denied"}
+        return {"app published successfully"}
 
-    # If not safe
-    if not security_status:
-        return {f"{files.filename} cannot be uploaded due to security reasons, please visit google.com for help"}
+    elif not dev_check:
+        return {"please create a developer account"}

@@ -70,17 +70,13 @@ def validate_device(device_serial_number: str):
 
 
 # Validate app
-def validate_app(app_name: str, status: bool):
-    if not status:
-        return 0
+def validate_app(app_name: str):
+    app_check = get_app_data(app_name, "app name")
+    if app_check is None:
+        return True
 
-    elif status:
-        app_check = get_app_data(app_name)
-        if app_check is None:
-            return 1
-
-        elif app_check is not None:
-            return 0
+    elif app_check is not None:
+        return False
 
 
 # Verify id token of user
@@ -95,3 +91,4 @@ def upload_file(filepath: str):
     blob = buckets.blob(filepath)
     blob.upload_from_filename(filepath)
     blob.make_public()
+    return str(blob.public_url)
